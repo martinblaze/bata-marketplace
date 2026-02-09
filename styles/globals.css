@@ -1,0 +1,106 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --primary: #6366F1;
+    --secondary: #8B5CF6;
+    --accent: #A78BFA;
+    --background: #F9FAFB;
+    --surface: #FFFFFF;
+    --text: #111827;
+  }
+
+  .dark {
+    --primary: #8B5CF6;
+    --secondary: #A78BFA;
+    --accent: #C4B5FD;
+    --background: #111827;
+    --surface: #1F2937;
+    --text: #FFFFFF;
+  }
+
+  * {
+    @apply border-gray-200 dark:border-gray-800;
+  }
+
+  body {
+    @apply bg-light-surface dark:bg-dark-background text-gray-900 dark:text-gray-100;
+    font-family: 'Inter', system-ui, sans-serif;
+  }
+}
+
+@layer components {
+  .btn-primary {
+    @apply bg-bata-primary dark:bg-bata-secondary text-white px-6 py-3 rounded-lg font-semibold hover:opacity-90 transition-all duration-200 shadow-md hover:shadow-lg;
+  }
+
+  .btn-secondary {
+    @apply bg-bata-secondary dark:bg-bata-accent text-white px-6 py-3 rounded-lg font-semibold hover:opacity-90 transition-all duration-200;
+  }
+
+  .btn-outline {
+    @apply border-2 border-bata-primary dark:border-bata-secondary text-bata-primary dark:text-bata-secondary px-6 py-3 rounded-lg font-semibold hover:bg-bata-primary hover:text-white dark:hover:bg-bata-secondary dark:hover:text-white transition-all duration-200;
+  }
+
+  .card {
+    @apply bg-white dark:bg-dark-surface rounded-xl shadow-lg p-6 transition-all duration-200 hover:shadow-xl;
+  }
+
+  .input {
+    @apply w-full px-4 py-3 rounded-lg border-2 border-gray-300 dark:border-gray-700 bg-white dark:bg-dark-surface text-gray-900 dark:text-gray-100 focus:border-light-primary dark:focus:border-dark-primary focus:outline-none transition-colors duration-200;
+  }
+
+  .badge {
+    @apply inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold;
+  }
+
+  .badge-bronze {
+    @apply bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200;
+  }
+
+  .badge-silver {
+    @apply bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200;
+  }
+
+  .badge-gold {
+    @apply bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200;
+  }
+
+  .badge-verified {
+    @apply bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200;
+  }
+}
+
+@layer utilities {
+  .text-gradient {
+    @apply bg-gradient-to-r from-bata-primary to-bata-secondary bg-clip-text text-transparent;
+  }
+
+  .glass-effect {
+    @apply backdrop-blur-md bg-white/30 dark:bg-gray-900/30;
+  }
+}
+
+/* Smooth scrolling */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  @apply bg-gray-100 dark:bg-gray-900;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-bata-primary dark:bg-bata-secondary rounded-full;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  @apply bg-bata-dark dark:bg-bata-accent rounded-full;
+}

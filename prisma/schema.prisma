@@ -1,0 +1,471 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  BUYER
+  SELLER
+  RIDER
+  ADMIN
+}
+
+enum TrustLevel {
+  BRONZE
+  SILVER
+  GOLD
+  VERIFIED
+}
+
+enum OrderStatus {
+  PENDING
+  PROCESSING
+  SHIPPED
+  RIDER_ASSIGNED
+  PICKED_UP
+  ON_THE_WAY
+  DELIVERED
+  COMPLETED
+  DISPUTED
+  CANCELLED
+}
+
+enum TransactionType {
+  CREDIT
+  DEBIT
+  ESCROW
+  WITHDRAWAL
+}
+
+enum ReviewType {
+  SELLER
+  RIDER
+}
+
+enum ReportType {
+  PRODUCT
+  SELLER
+  RIDER
+  BUYER
+}
+
+enum ReportReason {
+  FAKE_PRODUCT
+  WRONG_DESCRIPTION
+  POOR_QUALITY
+  DELAYED_DELIVERY
+  RUDE_BEHAVIOR
+  SCAM
+  INAPPROPRIATE_CONTENT
+  PAYMENT_ISSUE
+  OTHER
+}
+
+enum ReportStatus {
+  PENDING
+  UNDER_REVIEW
+  RESOLVED
+  DISMISSED
+}
+
+enum DisputeStatus {
+  OPEN
+  UNDER_REVIEW
+  RESOLVED_BUYER_FAVOR
+  RESOLVED_SELLER_FAVOR
+  RESOLVED_COMPROMISE
+  DISMISSED
+}
+
+enum PenaltyAction {
+  WARNING
+  TEMP_BAN_1DAY
+  TEMP_BAN_3DAYS
+  TEMP_BAN_7DAYS
+  TEMP_BAN_30DAYS
+  PERMANENT_BAN
+  TRUST_LEVEL_DOWNGRADE
+}
+
+model User {
+  id                String      @id @default(cuid())
+  phone             String      @unique
+  email             String?     @unique
+  password          String
+  matricNumber      String?     @unique
+  name              String
+  profilePhoto      String?
+  role              UserRole    @default(BUYER)
+  
+  isSellerMode      Boolean     @default(true)
+  
+  hostelName        String?
+  roomNumber        String?
+  landmark          String?
+  
+  bio               String?
+  
+  // Trust level and ratings
+  trustLevel        TrustLevel  @default(BRONZE)
+  avgRating         Float       @default(0)
+  totalReviews      Int         @default(0)
+  completedOrders   Int         @default(0)
+  
+  penaltyPoints     Int         @default(0)
+  isSuspended       Boolean     @default(false)
+  suspendedUntil    DateTime?
+  
+  // PHASE 7: Dispute & Safety fields
+  warningCount      Int         @default(0)
+  lastWarningAt     DateTime?
+  
+  // Wallet
+  pendingBalance    Float       @default(0)
+  availableBalance  Float       @default(0)
+  
+  // Relations
+  products          Product[]
+  orders            Order[]     @relation("BuyerOrders")
+  sellerOrders      Order[]     @relation("SellerOrders")
+  riderDeliveries   Order[]     @relation("RiderDeliveries")
+  
+  // Review relationships
+  reviewsGiven      Review[]    @relation("UserReviewsGiven")
+  reviewsReceived   Review[]    @relation("UserReviewsReceived")
+  
+  // Product review relationships
+  productReviewsGiven ProductReview[] @relation("ProductReviewsGiven")
+  
+  // PHASE 7: Dispute & Report relationships
+  reportsSubmitted  Report[]    @relation("ReportsSubmitted")
+  reportsReceived   Report[]    @relation("ReportsReceived")
+  disputesAsBuyer   Dispute[]   @relation("BuyerDisputes")
+  disputesAsSeller  Dispute[]   @relation("SellerDisputes")
+  penaltiesReceived Penalty[]   @relation("UserPenalties")
+  
+  // PHASE 7: Admin action relationships (NEW)
+  resolvedDisputes  Dispute[]   @relation("ResolvedBy")
+  resolvedReports   Report[]    @relation("ResolvedBy")
+  issuedPenalties   Penalty[]   @relation("IssuedBy")
+  
+  transactions      Transaction[]
+  
+  isRiderVerified   Boolean     @default(false)
+  riderIdDocument   String?
+  isAvailable       Boolean     @default(true)
+  
+  createdAt         DateTime    @default(now())
+  updatedAt         DateTime    @updatedAt
+}
+
+model Product {
+  id                String      @id @default(cuid())
+  name              String
+  description       String
+  price             Float
+  images            String[]
+  category          String
+  quantity          Int         @default(1)
+  
+  hostelName        String
+  roomNumber        String
+  landmark          String
+  
+  sellerId          String
+  seller            User        @relation(fields: [sellerId], references: [id], onDelete: Cascade)
+  
+  isActive          Boolean     @default(true)
+  viewCount         Int         @default(0)
+  
+  // Product rating fields
+  avgRating         Float       @default(0)
+  totalReviews      Int         @default(0)
+  
+  orders            Order[]
+  reviews           ProductReview[]
+  
+  // PHASE 7: Reports
+  reports           Report[]
+  
+  createdAt         DateTime    @default(now())
+  updatedAt         DateTime    @updatedAt
+  
+  @@index([sellerId])
+  @@index([category])
+}
+
+model Order {
+  id                String      @id @default(cuid())
+  orderNumber       String      @unique
+  
+  buyerId           String
+  buyer             User        @relation("BuyerOrders", fields: [buyerId], references: [id])
+  
+  sellerId          String
+  seller            User        @relation("SellerOrders", fields: [sellerId], references: [id])
+  
+  productId         String
+  product           Product     @relation(fields: [productId], references: [id])
+  
+  riderId           String?
+  rider             User?       @relation("RiderDeliveries", fields: [riderId], references: [id])
+  
+  productPrice      Float
+  deliveryFee       Float
+  totalAmount       Float
+  platformCommission Float      @default(0)
+  quantity          Int         @default(1)
+  
+  deliveryHostel    String
+  deliveryRoom      String
+  deliveryLandmark  String
+  deliveryPhone     String
+  
+  status            OrderStatus @default(PENDING)
+  
+  orderedAt         DateTime    @default(now())
+  riderAssignedAt   DateTime?
+  pickedUpAt        DateTime?
+  deliveredAt       DateTime?
+  completedAt       DateTime?
+  
+  paymentId         String?
+  isPaid            Boolean     @default(false)
+  
+  isDisputed        Boolean     @default(false)
+  disputeReason     String?
+  
+  reviews           Review[]
+  productReviews    ProductReview[]
+  
+  // PHASE 7: Reports and Disputes
+  reports           Report[]
+  dispute           Dispute?
+  
+  createdAt         DateTime    @default(now())
+  updatedAt         DateTime    @updatedAt
+  
+  @@index([buyerId])
+  @@index([sellerId])
+  @@index([riderId])
+  @@index([status])
+}
+
+model Review {
+  id                String      @id @default(cuid())
+  rating            Int         // 1-5 stars
+  comment           String?
+  
+  // Relationships
+  orderId           String
+  order             Order       @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  
+  reviewerId        String      // Buyer who wrote the review
+  reviewer          User        @relation("UserReviewsGiven", fields: [reviewerId], references: [id])
+  
+  revieweeId        String      // Can be Seller OR Rider
+  reviewee          User        @relation("UserReviewsReceived", fields: [revieweeId], references: [id])
+  
+  type              ReviewType  @default(SELLER) // SELLER or RIDER
+  
+  createdAt         DateTime    @default(now())
+  updatedAt         DateTime    @updatedAt
+  
+  @@index([orderId])
+  @@index([revieweeId])
+  @@index([reviewerId])
+  @@unique([orderId, type, reviewerId]) // Prevent duplicate reviews
+}
+
+model ProductReview {
+  id                String      @id @default(cuid())
+  rating            Int         // 1-5 stars
+  comment           String
+  
+  // Relationships
+  orderId           String
+  order             Order       @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  
+  productId         String
+  product           Product     @relation(fields: [productId], references: [id], onDelete: Cascade)
+  
+  reviewerId        String      // Buyer who wrote the review
+  reviewer          User        @relation("ProductReviewsGiven", fields: [reviewerId], references: [id])
+  
+  createdAt         DateTime    @default(now())
+  updatedAt         DateTime    @updatedAt
+  
+  @@index([orderId])
+  @@index([productId])
+  @@index([reviewerId])
+  @@unique([orderId, productId, reviewerId]) // Prevent duplicate product reviews
+}
+
+model OTP {
+  id                String      @id @default(cuid())
+  phone             String?
+  email             String?
+  code              String
+  expiresAt         DateTime
+  isUsed            Boolean     @default(false)
+  
+  createdAt         DateTime    @default(now())
+  
+  @@index([phone])
+  @@index([email])
+}
+
+model Transaction {
+  id                String      @id @default(cuid())
+  userId            String
+  user              User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  type              TransactionType
+  amount            Float
+  description       String
+  reference         String?
+  
+  balanceBefore     Float
+  balanceAfter      Float
+  
+  createdAt         DateTime    @default(now())
+  
+  @@index([userId])
+  @@index([type])
+  @@index([createdAt])
+}
+
+model Report {
+  id                String        @id @default(cuid())
+  
+  type              ReportType
+  reason            ReportReason
+  description       String
+  evidence          String[]      // URLs to images/screenshots
+  
+  // Reporter
+  reporterId        String
+  reporter          User          @relation("ReportsSubmitted", fields: [reporterId], references: [id])
+  
+  // Reported entity (one of these will be set)
+  reportedUserId    String?
+  reportedUser      User?         @relation("ReportsReceived", fields: [reportedUserId], references: [id])
+  
+  reportedProductId String?
+  reportedProduct   Product?      @relation(fields: [reportedProductId], references: [id])
+  
+  reportedOrderId   String?
+  reportedOrder     Order?        @relation(fields: [reportedOrderId], references: [id])
+  
+  // Status
+  status            ReportStatus  @default(PENDING)
+  adminNotes        String?
+  resolvedAt        DateTime?
+  resolvedBy        String?       // Admin user ID
+  
+  // Link to dispute if escalated
+  disputeId         String?       @unique
+  dispute           Dispute?      @relation(fields: [disputeId], references: [id])
+  
+  // PHASE 7: Admin resolver relation (NEW)
+  resolver          User?         @relation("ResolvedBy", fields: [resolvedBy], references: [id])
+  
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+  
+  @@index([reporterId])
+  @@index([reportedUserId])
+  @@index([reportedProductId])
+  @@index([status])
+}
+
+model Dispute {
+  id                String        @id @default(cuid())
+  
+  orderId           String        @unique
+  order             Order         @relation(fields: [orderId], references: [id])
+  
+  buyerId           String
+  buyer             User          @relation("BuyerDisputes", fields: [buyerId], references: [id])
+  
+  sellerId          String
+  seller            User          @relation("SellerDisputes", fields: [sellerId], references: [id])
+  
+  reason            String
+  buyerEvidence     String[]      // Screenshots, photos
+  sellerEvidence    String[]
+  
+  status            DisputeStatus @default(OPEN)
+  
+  // Resolution
+  resolution        String?       // Admin's decision
+  refundAmount      Float?
+  resolvedAt        DateTime?
+  resolvedBy        String?       // Admin user ID
+  
+  // Messages between parties and admin
+  messages          DisputeMessage[]
+  
+  // Related report
+  report            Report?
+  
+  // PHASE 7: Admin resolver relation (NEW)
+  resolver          User?         @relation("ResolvedBy", fields: [resolvedBy], references: [id])
+  
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+  
+  @@index([orderId])
+  @@index([buyerId])
+  @@index([sellerId])
+  @@index([status])
+}
+
+model DisputeMessage {
+  id                String        @id @default(cuid())
+  
+  disputeId         String
+  dispute           Dispute       @relation(fields: [disputeId], references: [id], onDelete: Cascade)
+  
+  senderId          String        // Can be buyer, seller, or admin
+  senderType        String        // "BUYER", "SELLER", "ADMIN"
+  
+  message           String
+  attachments       String[]      // Image URLs
+  
+  createdAt         DateTime      @default(now())
+  
+  @@index([disputeId])
+}
+
+model Penalty {
+  id                String        @id @default(cuid())
+  
+  userId            String
+  user              User          @relation("UserPenalties", fields: [userId], references: [id])
+  
+  action            PenaltyAction
+  reason            String
+  pointsAdded       Int           // Penalty points added
+  
+  // Related to report/dispute
+  reportId          String?
+  disputeId         String?
+  
+  // Ban details
+  bannedUntil       DateTime?
+  
+  issuedBy          String?       // Admin user ID
+  
+  // PHASE 7: Admin issuer relation (NEW)
+  issuer            User?         @relation("IssuedBy", fields: [issuedBy], references: [id])
+  
+  createdAt         DateTime      @default(now())
+  
+  @@index([userId])
+  @@index([createdAt])
+}
