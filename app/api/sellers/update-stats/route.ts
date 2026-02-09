@@ -2,12 +2,12 @@ import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import { TrustLevel, ReviewType } from '@prisma/client';
 
-// Helper function to update seller stats
-export async function updateSellerStats(sellerId: string) {
+// Helper function to update seller stats (keeping this as a reusable function)
+async function updateSellerStats(sellerId: string) {
   try {
     // Get all seller reviews
     const sellerReviews = await prisma.review.findMany({
-      where: { 
+      where: {
         revieweeId: sellerId,
         type: 'SELLER' as ReviewType
       },
@@ -42,7 +42,7 @@ export async function updateSellerStats(sellerId: string) {
 
     // Calculate trust level
     let trustLevel: TrustLevel = 'BRONZE';
-    
+
     if (totalReviews >= 3) {
       if (avgRating >= 4.5 && totalReviews >= 10) {
         trustLevel = 'VERIFIED';
@@ -127,7 +127,7 @@ export async function GET(req: NextRequest) {
     for (const seller of sellers) {
       // Get all seller reviews
       const sellerReviews = await prisma.review.findMany({
-        where: { 
+        where: {
           revieweeId: seller.id,
           type: 'SELLER' as ReviewType
         },
@@ -154,7 +154,7 @@ export async function GET(req: NextRequest) {
 
       // Calculate trust level
       let trustLevel: TrustLevel = 'BRONZE';
-      
+
       if (totalReviews >= 3) {
         if (avgRating >= 4.5 && totalReviews >= 10) {
           trustLevel = 'VERIFIED';

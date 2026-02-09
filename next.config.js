@@ -3,9 +3,7 @@ const nextConfig = {
   images: {
     domains: ['localhost', 'res.cloudinary.com', 'lh3.googleusercontent.com'],
   },
-  experimental: {
-    serverActions: true,
-  },
+  // Removed experimental.serverActions as it's now stable and enabled by default
 }
 
 module.exports = nextConfig
