@@ -145,23 +145,23 @@ export default function OrderDetailPage() {
 
     if (userRole === 'SELLER') {
       if (order.status === 'PENDING') {
-        actions.push({ label: 'Process Order', status: 'PROCESSING' });
-        actions.push({ label: 'Cancel Order', status: 'CANCELLED', variant: 'destructive' });
+        actions.push({ label: 'Process Order', status: 'PROCESSING', variant: 'primary' });
+        actions.push({ label: 'Cancel Order', status: 'CANCELLED', variant: 'danger' });
       }
       if (order.status === 'PROCESSING') {
-        actions.push({ label: 'Mark as Shipped', status: 'SHIPPED' });
+        actions.push({ label: 'Mark as Shipped', status: 'SHIPPED', variant: 'primary' });
       }
     }
 
     if (userRole === 'RIDER') {
       if (order.status === 'SHIPPED') {
-        actions.push({ label: 'Mark as Delivered', status: 'DELIVERED' });
+        actions.push({ label: 'Mark as Delivered', status: 'DELIVERED', variant: 'success' });
       }
     }
 
     if (userRole === 'BUYER') {
       if (order.status === 'PENDING') {
-        actions.push({ label: 'Cancel Order', status: 'CANCELLED', variant: 'destructive' });
+        actions.push({ label: 'Cancel Order', status: 'CANCELLED', variant: 'danger' });
       }
     }
 
@@ -217,7 +217,7 @@ export default function OrderDetailPage() {
         </Button>
       </div>
     );
-  }
+  };
 
   const statusActions = getStatusActions();
   const userRole = getCurrentUserRole();
@@ -250,13 +250,13 @@ export default function OrderDetailPage() {
           </div>
         </div>
 
-        {/* Status actions */}
+        {/* Status actions - FIXED: Changed 'destructive' to 'danger' and 'default' to 'primary' */}
         {statusActions.length > 0 && (
           <div className="flex flex-wrap gap-2 mt-4 md:mt-0">
             {statusActions.map((action) => (
               <Button
                 key={action.status}
-                variant={action.variant === 'destructive' ? 'destructive' : 'default'}
+                variant={action.variant as 'primary' | 'secondary' | 'outline' | 'ghost' | 'danger' | 'success'}
                 onClick={() => updateOrderStatus(action.status)}
                 disabled={updating}
               >
