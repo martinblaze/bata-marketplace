@@ -3,7 +3,8 @@ import prisma from '@/lib/prisma';
 import { TrustLevel, ReviewType } from '@prisma/client';
 
 // Helper function to update seller stats (keeping this as a reusable function)
-async function updateSellerStats(sellerId: string) {
+// FIXED: Added 'export' keyword to make this function available for import
+export async function updateSellerStats(sellerId: string) {
   try {
     // Get all seller reviews
     const sellerReviews = await prisma.review.findMany({

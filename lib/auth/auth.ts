@@ -161,6 +161,31 @@ export async function getUserFromRequest(request: Request) {
 
   const user = await prisma.user.findUnique({
     where: { id: decoded.userId },
+    select: {
+      id: true,
+      name: true,
+      phone: true,
+      email: true,
+      matricNumber: true,
+      profilePhoto: true,
+      role: true,
+      hostelName: true,
+      roomNumber: true,
+      landmark: true,
+      trustLevel: true,
+      avgRating: true,        // Fixed: Changed from 'rating'
+      totalReviews: true,     // Fixed: Changed from 'totalRatings'
+      completedOrders: true,
+      pendingBalance: true,
+      availableBalance: true,
+      penaltyPoints: true,
+      isSuspended: true,
+      suspendedUntil: true,
+      isRiderVerified: true,
+      isAvailable: true,
+      createdAt: true,
+      updatedAt: true,
+    },
   })
 
   return user
