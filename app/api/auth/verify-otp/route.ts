@@ -37,6 +37,7 @@ export async function POST(request: NextRequest) {
           phone: phone ? formatPhone(phone) : undefined,
           email: email || undefined,
           name,
+          password: '', // FIXED: Added empty password for OTP-based auth
         },
       })
     } else if (!user) {
