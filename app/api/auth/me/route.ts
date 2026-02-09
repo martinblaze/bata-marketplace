@@ -29,8 +29,8 @@ export async function GET(request: NextRequest) {
         
         // Trust & Ratings
         trustLevel: user.trustLevel,
-        rating: user.rating,
-        totalRatings: user.totalRatings,
+        rating: user.avgRating,          // FIXED: was user.rating, now user.avgRating
+        totalRatings: user.totalReviews, // FIXED: was user.totalRatings, now user.totalReviews
         completedOrders: user.completedOrders,
         
         // Wallet
