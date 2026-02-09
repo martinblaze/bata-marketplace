@@ -173,8 +173,8 @@ export async function getUserFromRequest(request: Request) {
       roomNumber: true,
       landmark: true,
       trustLevel: true,
-      avgRating: true,        // Fixed: Changed from 'rating'
-      totalReviews: true,     // Fixed: Changed from 'totalRatings'
+      avgRating: true,
+      totalReviews: true,
       completedOrders: true,
       pendingBalance: true,
       availableBalance: true,

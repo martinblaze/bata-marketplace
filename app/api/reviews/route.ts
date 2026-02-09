@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import jwt from 'jsonwebtoken';
 import { z } from 'zod';
-import { updateSellerStats } from '../sellers/update-stats/route';
+import { updateSellerStats } from '@/lib/utils/seller-stats';
 import { ReviewType } from '@prisma/client';
 
 // Helper function to get user from JWT token
